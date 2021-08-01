@@ -1,14 +1,31 @@
-import { QueryFunctionContext, QueryKey, useQuery } from 'react-query';
+import { useQuery, UseQueryOptions } from 'react-query';
 
 import api from 'constants/api';
-import { FeedDetail } from 'types';
+import { ErrorHandler, FeedDetail } from 'types';
+import HttpError from 'utils/HttpError';
+import { resolveHttpErrorResponse } from 'utils/error';
 
-const getFeedDetail = async ({ queryKey }: QueryFunctionContext<QueryKey, number>) => {
-  const [_, id] = queryKey;
-  const { data } = await api.get(`/feeds/${id}`);
-  return data;
+interface CustomQueryOption extends UseQueryOptions<FeedDetail, HttpError> {
+  errorHandler?: ErrorHandler;
+  id: number;
+}
+
+const getFeedDetail = async (id: number, errorHandler: ErrorHandler) => {
+  try {
+    const { data } = await api.get(`/feeds/${id}`);
+
+    return data;
+  } catch (error) {
+    resolveHttpErrorResponse({
+      errorResponse: error.response,
+      defaultErrorMessage: '피드 상세 정보에 에러가 발생했습니다',
+      errorHandler,
+    });
+  }
 };
 
-export default function useFeedDetail(id: number) {
-  return useQuery<FeedDetail>(['feedDetail', id], getFeedDetail);
-}
+const useFeedDetail = ({ errorHandler, id, ...option }: CustomQueryOption) => {
+  return useQuery<FeedDetail>(['feedDetail', id], () => getFeedDetail(id, errorHandler), option);
+};
+
+export default useFeedDetail;

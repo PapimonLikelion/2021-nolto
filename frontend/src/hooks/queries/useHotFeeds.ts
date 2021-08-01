@@ -1,13 +1,30 @@
-import { useQuery } from 'react-query';
+import { useQuery, UseQueryOptions } from 'react-query';
 
 import api from 'constants/api';
-import { Feed } from 'types';
+import HttpError from 'utils/HttpError';
+import { Feed, ErrorHandler } from 'types';
+import { resolveHttpErrorResponse } from 'utils/error';
 
-const getHotFeeds = async () => {
-  const { data } = await api.get('/feeds/hot');
-  return data;
+interface CustomQueryOption extends UseQueryOptions<Feed[], HttpError> {
+  errorHandler?: ErrorHandler;
+}
+
+const getHotFeeds = async (errorHandler?: ErrorHandler) => {
+  try {
+    const { data } = await api.get('/feeds/hot');
+
+    return data;
+  } catch (error) {
+    resolveHttpErrorResponse({
+      errorResponse: error.response,
+      defaultErrorMessage: '인기 피드에 에러가 발생했습니다',
+      errorHandler,
+    });
+  }
 };
 
-export default function useFeeds() {
-  return useQuery<Feed[]>('hotFeeds', getHotFeeds);
-}
+const useHotFeeds = ({ errorHandler, ...option }: CustomQueryOption) => {
+  return useQuery<Feed[], HttpError>(['hotFeeds'], () => getHotFeeds(errorHandler), option);
+};
+
+export default useHotFeeds;

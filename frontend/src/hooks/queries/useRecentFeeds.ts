@@ -1,13 +1,35 @@
-import { useQuery } from 'react-query';
+import { useQuery, UseQueryOptions } from 'react-query';
 
 import api from 'constants/api';
-import { Feed } from 'types';
+import HttpError from 'utils/HttpError';
+import { Feed, FilterType, ErrorHandler } from 'types';
+import { resolveHttpErrorResponse } from 'utils/error';
 
-const getRecentFeeds = async () => {
-  const { data } = await api.get('/feeds/recent');
-  return data;
+interface CustomQueryOption extends UseQueryOptions<Feed[], HttpError> {
+  filter?: FilterType;
+  errorHandler?: ErrorHandler;
+}
+
+const getRecentFeeds = async (filter: FilterType, errorHandler: ErrorHandler) => {
+  try {
+    const { data } = await api.get('/feeds/recent', { params: { filter } });
+
+    return data;
+  } catch (error) {
+    resolveHttpErrorResponse({
+      errorResponse: error.response,
+      defaultErrorMessage: '최신 피드에 에러가 발생했습니다',
+      errorHandler,
+    });
+  }
 };
 
-export default function useFeeds() {
-  return useQuery<Feed[]>('recentFeeds', getRecentFeeds);
-}
+const useRecentFeeds = ({ filter, errorHandler, ...option }: CustomQueryOption) => {
+  return useQuery<Feed[]>(
+    ['recentFeeds', filter],
+    () => getRecentFeeds(filter, errorHandler),
+    option,
+  );
+};
+
+export default useRecentFeeds;

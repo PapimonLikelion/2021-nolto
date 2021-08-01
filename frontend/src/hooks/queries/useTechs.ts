@@ -1,17 +1,31 @@
-import { QueryFunctionContext, QueryKey, useQuery } from 'react-query';
+import { useQuery, UseQueryOptions } from 'react-query';
 
 import api from 'constants/api';
-import { Tech } from 'types';
+import { ErrorHandler, Tech } from 'types';
+import HttpError from 'utils/HttpError';
+import { resolveHttpErrorResponse } from 'utils/error';
 
-const getTechs = async ({ queryKey }: QueryFunctionContext<QueryKey, string>) => {
-  const [_, autoComplete] = queryKey;
+interface CustomQueryOption extends UseQueryOptions<Tech[], HttpError> {
+  errorHandler?: ErrorHandler;
+  techs: string;
+}
 
-  const { data } = await api.get(`/tags/techs?auto_complete=${autoComplete}`);
-  return data;
+const getTechs = async (techs: string, errorHandler: ErrorHandler) => {
+  try {
+    const { data } = await api.get(`tags/techs/search?names=${techs}`);
+
+    return data;
+  } catch (error) {
+    resolveHttpErrorResponse({
+      errorResponse: error.response,
+      defaultErrorMessage: '기술스택을 불러오는 과정에서 에러가 발생했습니다',
+      errorHandler,
+    });
+  }
 };
 
-export default function useTechs(autoComplete: string) {
-  return useQuery<Tech[]>(['techs', autoComplete], getTechs, {
-    enabled: !!autoComplete,
-  });
-}
+const useTechs = ({ techs, errorHandler, ...option }: CustomQueryOption) => {
+  return useQuery<Tech[]>(['techs', techs], () => getTechs(techs, errorHandler), option);
+};
+
+export default useTechs;

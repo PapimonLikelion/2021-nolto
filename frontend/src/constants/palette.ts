@@ -1,6 +1,10 @@
 export const PALETTE = {
   WHITE_400: '#ffffff',
 
+  GRAY_300: '#dfe6e9',
+  GRAY_400: '#b2bec3',
+  GRAY_500: '#7a7a7a',
+
   BLACK_200: '#999999',
   BLACK_300: '#444444',
   BLACK_400: '#333333',
@@ -13,4 +17,5 @@ export const PALETTE = {
   HIGHLIGHT: '#FFBB33',
 
   RED_400: '#FF0000',
+  RED_500: '#FF2020',
 };
