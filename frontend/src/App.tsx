@@ -11,10 +11,11 @@ import RecentFeeds from 'pages/RecentFeeds/RecentFeeds';
 import SearchResult from 'pages/SearchResult/SearchResult';
 import OAuth from 'pages/OAuth/OAuth';
 import Modify from 'pages/Modify/Modify';
+import Mypage from 'pages/Mypage/Mypage';
 import PrivateRoute from 'components/PrivateRoute';
-import NotificationProvider from 'context/notification/NotificationProvider';
-import ModalProvider from 'context/modal/ModalProvider';
-import SnackBarProvider from 'context/snackBar/SnackBarProvider';
+import DialogProvider from 'contexts/dialog/DialogProvider';
+import ModalProvider from 'contexts/modal/ModalProvider';
+import SnackbarProvider from 'contexts/snackbar/SnackbarProvider';
 import ROUTE from 'constants/routes';
 import GlobalStyle from './Global.styles';
 
@@ -34,8 +35,8 @@ const App = () => {
       <GlobalStyle />
       <Router>
         <Switch>
-          <SnackBarProvider>
-            <NotificationProvider>
+          <SnackbarProvider>
+            <DialogProvider>
               <ModalProvider>
                 <main>
                   <Route exact path={ROUTE.HOME}>
@@ -59,13 +60,16 @@ const App = () => {
                   <Route path={ROUTE.SEARCH}>
                     <SearchResult />
                   </Route>
+                  <Route path={ROUTE.MYPAGE}>
+                    <Mypage />
+                  </Route>
                   <Route path="/:oauth/callback">
                     <OAuth />
                   </Route>
                 </main>
               </ModalProvider>
-            </NotificationProvider>
-          </SnackBarProvider>
+            </DialogProvider>
+          </SnackbarProvider>
         </Switch>
       </Router>
       <ReactQueryDevtools panelProps={{ className: 'query-dev-tools' }} initialIsOpen={false} />

@@ -34,8 +34,8 @@ public class Like {
         return this.feed.equals(feed);
     }
 
-    public boolean SameAs(User user) {
-        return this.user.SameAs(user);
+    public boolean sameAs(User user) {
+        return this.user.sameAs(user);
     }
 
     @Override

@@ -5,18 +5,20 @@ import com.wooteco.nolto.exception.NotFoundException;
 import com.wooteco.nolto.exception.UnauthorizedException;
 import com.wooteco.nolto.feed.application.searchstrategy.SearchStrategy;
 import com.wooteco.nolto.feed.application.searchstrategy.SearchStrategyFactory;
-import com.wooteco.nolto.feed.domain.Feed;
-import com.wooteco.nolto.feed.domain.Feeds;
-import com.wooteco.nolto.feed.domain.FilterStrategy;
-import com.wooteco.nolto.feed.domain.Step;
+import com.wooteco.nolto.feed.domain.*;
 import com.wooteco.nolto.feed.domain.repository.FeedRepository;
+import com.wooteco.nolto.feed.domain.repository.FeedTechRepository;
 import com.wooteco.nolto.feed.ui.dto.FeedCardResponse;
 import com.wooteco.nolto.feed.ui.dto.FeedRequest;
 import com.wooteco.nolto.feed.ui.dto.FeedResponse;
+import com.wooteco.nolto.image.application.ImageKind;
 import com.wooteco.nolto.image.application.ImageService;
+import com.wooteco.nolto.notification.application.NotificationCommentDeleteEvent;
+import com.wooteco.nolto.notification.application.NotificationFeedDeleteEvent;
 import com.wooteco.nolto.tech.domain.TechRepository;
 import com.wooteco.nolto.user.domain.User;
 import lombok.AllArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -33,9 +35,11 @@ public class FeedService {
     private final ImageService imageService;
     private final FeedRepository feedRepository;
     private final TechRepository techRepository;
+    private final FeedTechRepository feedTechRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     public Long create(User user, FeedRequest request) {
-        String thumbnailUrl = imageService.upload(request.getThumbnailImage());
+        String thumbnailUrl = imageService.upload(request.getThumbnailImage(), ImageKind.FEED);
 
         Feed feed = request.toEntityWithThumbnailUrl(thumbnailUrl).writtenBy(user);
         feed.changeTechs(techRepository.findAllById(request.getTechs()));
@@ -45,11 +49,10 @@ public class FeedService {
     }
 
     public void update(User user, Long feedId, FeedRequest request) {
-        Feed findFeed = findEntityById(feedId);
-
-        if (findFeed.notSameAuthor(user)) {
-            throw new UnauthorizedException(ErrorType.UNAUTHORIZED_UPDATE_FEED);
-        }
+        Feed findFeed = user.findMyFeed(feedId);
+        List<FeedTech> feedTechs = findFeed.getFeedTechs();
+        feedTechRepository.deleteAll(feedTechs);
+        feedTechs.clear();
         updateFeed(request, findFeed);
     }
 
@@ -70,7 +73,7 @@ public class FeedService {
     private void updateThumbnailIfImageExist(FeedRequest request, Feed findFeed) {
         if (imageService.isEmpty(request.getThumbnailImage())) return;
 
-        String updateThumbnailUrl = imageService.update(findFeed.getThumbnailUrl(), request.getThumbnailImage());
+        String updateThumbnailUrl = imageService.update(findFeed.getThumbnailUrl(), request.getThumbnailImage(), ImageKind.FEED);
         findFeed.changeThumbnailUrl(updateThumbnailUrl);
     }
 
@@ -103,7 +106,7 @@ public class FeedService {
         if (findFeed.notSameAuthor(user)) {
             throw new UnauthorizedException(ErrorType.UNAUTHORIZED_DELETE_FEED);
         }
-
+        applicationEventPublisher.publishEvent(new NotificationFeedDeleteEvent(findFeed));
         feedRepository.delete(findFeed);
     }
 

@@ -7,6 +7,7 @@ import com.wooteco.nolto.feed.domain.Step;
 import com.wooteco.nolto.feed.ui.dto.FeedCardResponse;
 import com.wooteco.nolto.feed.ui.dto.FeedRequest;
 import com.wooteco.nolto.feed.ui.dto.FeedResponse;
+import com.wooteco.nolto.image.application.ImageKind;
 import com.wooteco.nolto.image.application.ImageService;
 import com.wooteco.nolto.tech.domain.Tech;
 import com.wooteco.nolto.tech.domain.TechRepository;
@@ -24,7 +25,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
-import org.testcontainers.shaded.com.google.common.net.HttpHeaders;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -50,17 +50,18 @@ public class FeedAcceptanceTest extends AcceptanceTest {
     private Long 진행중_SOS_좋아요1개_3번째_피드_ID;
     private Long 전시중_SOS_좋아요0개_4번째_피드_ID;
 
-    private FeedRequest 진행중_단계의_피드_요청 = new FeedRequest("title1", new ArrayList<>(), "content1", "PROGRESS", false,
+    public static final FeedRequest 진행중_단계의_피드_요청 = new FeedRequest("title1", new ArrayList<>(), "content1", "PROGRESS", false,
             "www.github.com/woowacourse", null, null);
-    private FeedRequest 전시중_단계의_피드_요청 = new FeedRequest("title2", new ArrayList<>(), "content2", "COMPLETE", false,
+    public static final FeedRequest 전시중_단계의_피드_요청 = new FeedRequest("title2", new ArrayList<>(), "content2", "COMPLETE", false,
             "www.github.com/woowacourse", "www.github.com/woowacourse", null);
-    private FeedRequest 진행중_단계의_SOS_피드_요청 = new FeedRequest("title3", new ArrayList<>(), "content3", "PROGRESS", true,
+    public static final FeedRequest 진행중_단계의_SOS_피드_요청 = new FeedRequest("title3", new ArrayList<>(), "content3", "PROGRESS", true,
             "www.github.com/woowacourse", "www.github.com/woowacourse", null);
-    private FeedRequest 전시중_단계의_SOS_피드_요청 = new FeedRequest("title4", new ArrayList<>(), "content4", "COMPLETE", true,
+    public static final FeedRequest 전시중_단계의_SOS_피드_요청 = new FeedRequest("title4", new ArrayList<>(), "content4", "COMPLETE", true,
             "www.github.com/woowacourse", "www.github.com/woowacourse", null);
 
-    private final String defaultImageUrl = "nolto-default-thumbnail.png";
-    private final File thumbnail = new File(new File("").getAbsolutePath() + "/src/test/resources/static/" + defaultImageUrl);
+    public static final String DEFAULT_IMAGE = "nolto-default-thumbnail.png";
+    public static final String DEFAULT_IMAGE_URL = "https://dksykemwl00pf.cloudfront.net/" + "nolto-default-thumbnail.png";
+    public static final File THUMBNAIL_IMAGE = new File(new File("").getAbsolutePath() + "/src/test/resources/static/" + DEFAULT_IMAGE);
 
     @Autowired
     private TechRepository techRepository;
@@ -72,10 +73,10 @@ public class FeedAcceptanceTest extends AcceptanceTest {
     private final Tech SPRING = new Tech("Spring");
     private final Tech REACT = new Tech("React");
 
-    @Override
     @BeforeEach
-    public void setUp() {
-        BDDMockito.given(imageService.upload(any(MultipartFile.class))).willReturn("https://dksykemwl00pf.cloudfront.net/" + defaultImageUrl);
+    void setUpOnFeedAcceptance() {
+        super.setUp();
+        BDDMockito.given(imageService.upload(any(MultipartFile.class), any(ImageKind.class))).willReturn("https://dksykemwl00pf.cloudfront.net/" + DEFAULT_IMAGE_URL);
         techRepository.saveAll(Arrays.asList(JAVA, SPRING, REACT));
 
         진행중_좋아요3개_1번째_피드_ID = 피드_업로드되어_있음(진행중_단계의_피드_요청);
@@ -83,9 +84,9 @@ public class FeedAcceptanceTest extends AcceptanceTest {
         진행중_SOS_좋아요1개_3번째_피드_ID = 피드_업로드되어_있음(진행중_단계의_SOS_피드_요청);
         전시중_SOS_좋아요0개_4번째_피드_ID = 피드_업로드되어_있음(전시중_단계의_SOS_피드_요청);
 
-        좋아요_1개_누를_유저 = 회원_등록되어_있음(new User(null, "2", SocialType.GITHUB, "아마찌", "https://dksykemwl00pf.cloudfront.net/amazzi.jpeg"));
-        좋아요_2개_누를_유저 = 회원_등록되어_있음(new User(null, "3", SocialType.GITHUB, "마찌", "https://dksykemwl00pf.cloudfront.net/amazzi.jpeg"));
-        좋아요_3개_누를_유저 = 회원_등록되어_있음(new User(null, "4", SocialType.GITHUB, "아마짜", "https://dksykemwl00pf.cloudfront.net/amazzi.jpeg"));
+        좋아요_1개_누를_유저 = 회원_등록되어_있음(new User("2", SocialType.GITHUB, "아마찌", "https://dksykemwl00pf.cloudfront.net/amazzi.jpeg"));
+        좋아요_2개_누를_유저 = 회원_등록되어_있음(new User("3", SocialType.GITHUB, "마찌", "https://dksykemwl00pf.cloudfront.net/amazzi.jpeg"));
+        좋아요_3개_누를_유저 = 회원_등록되어_있음(new User("4", SocialType.GITHUB, "아마짜", "https://dksykemwl00pf.cloudfront.net/amazzi.jpeg"));
     }
 
     @DisplayName("놀토의 회원이 피드를 작성한다. (이미지 : 기본 썸네일)")
@@ -206,7 +207,7 @@ public class FeedAcceptanceTest extends AcceptanceTest {
                 .formParam("sos", false)
                 .formParam("StorageUrl", "https://github.com/woowacourse-teams/2021-nolto")
                 .formParam("DeployedUrl", "https://github.com/woowacourse-teams/2021-nolto")
-                .multiPart("thumbnailImage", thumbnail)
+                .multiPart("thumbnailImage", THUMBNAIL_IMAGE)
                 .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
                 .when()
                 .put("/feeds/{feedId}", feedId)
@@ -363,6 +364,38 @@ public class FeedAcceptanceTest extends AcceptanceTest {
         assertThat(response.getMessage()).isEqualTo(NOT_LIKED.getMessage());
     }
 
+    @DisplayName("놀토 회원이 좋아요를 취소하고 다시 좋아요를 누른다.")
+    @Test
+    void deleteLikeAndAgain() {
+        // given
+        FeedRequest request = new FeedRequest(
+                "Amazing Project",
+                Arrays.asList(JAVA.getId(), SPRING.getId()),
+                "This is my Project. follow me if you want my other projects",
+                Step.PROGRESS.name(),
+                true,
+                "https://github.com/woowacourse-teams/2021-nolto",
+                "",
+                null
+        );
+        String token = 가입된_유저의_토큰을_받는다().getAccessToken();
+        ExtractableResponse<Response> saveResponse = 피드를_작성한다(request, token);
+        Long feedId = Long.valueOf(saveResponse.header("Location").replace("/feeds/", ""));
+        좋아요를_누른다(token, feedId);
+        given().log().all()
+                .auth().oauth2(token)
+                .when()
+                .post("/feeds/{feedId}/unlike", feedId)
+                .then().log().all()
+                .extract();
+
+        // when
+        ExtractableResponse<Response> likeResponse = 좋아요를_누른다(token, feedId);
+
+        // then
+        assertThat(likeResponse.statusCode()).isEqualTo(HttpStatus.OK.value());
+    }
+
     @DisplayName("인기순으로 피드를 조회한다.")
     @Test
     void hotResponse() {
@@ -370,12 +403,12 @@ public class FeedAcceptanceTest extends AcceptanceTest {
         TokenResponse 좋아요_1개_누를_유저_토큰 = 가입된_유저의_토큰을_받는다(좋아요_1개_누를_유저);
         TokenResponse 좋아요_2개_누를_유저_토큰 = 가입된_유저의_토큰을_받는다(좋아요_2개_누를_유저);
         TokenResponse 좋아요_3개_누를_유저_토큰 = 가입된_유저의_토큰을_받는다(좋아요_3개_누를_유저);
-        피드에_좋아요_눌러져있음(좋아요_1개_누를_유저_토큰, 진행중_좋아요3개_1번째_피드_ID);
-        피드에_좋아요_눌러져있음(좋아요_2개_누를_유저_토큰, 진행중_좋아요3개_1번째_피드_ID);
-        피드에_좋아요_눌러져있음(좋아요_3개_누를_유저_토큰, 진행중_좋아요3개_1번째_피드_ID);
-        피드에_좋아요_눌러져있음(좋아요_2개_누를_유저_토큰, 전시중_좋아요2개_2번째_피드_ID);
-        피드에_좋아요_눌러져있음(좋아요_3개_누를_유저_토큰, 전시중_좋아요2개_2번째_피드_ID);
-        피드에_좋아요_눌러져있음(좋아요_3개_누를_유저_토큰, 진행중_SOS_좋아요1개_3번째_피드_ID);
+        피드에_좋아요_눌러져있음(좋아요_1개_누를_유저_토큰.getAccessToken(), 진행중_좋아요3개_1번째_피드_ID);
+        피드에_좋아요_눌러져있음(좋아요_2개_누를_유저_토큰.getAccessToken(), 진행중_좋아요3개_1번째_피드_ID);
+        피드에_좋아요_눌러져있음(좋아요_3개_누를_유저_토큰.getAccessToken(), 진행중_좋아요3개_1번째_피드_ID);
+        피드에_좋아요_눌러져있음(좋아요_2개_누를_유저_토큰.getAccessToken(), 전시중_좋아요2개_2번째_피드_ID);
+        피드에_좋아요_눌러져있음(좋아요_3개_누를_유저_토큰.getAccessToken(), 전시중_좋아요2개_2번째_피드_ID);
+        피드에_좋아요_눌러져있음(좋아요_3개_누를_유저_토큰.getAccessToken(), 진행중_SOS_좋아요1개_3번째_피드_ID);
 
         // when
         ExtractableResponse<Response> response = 인기순_피드_목록_조회_요청();
@@ -482,7 +515,7 @@ public class FeedAcceptanceTest extends AcceptanceTest {
         // then
         피드_목록_조회_응답됨(JAVA_기술_응답);
         피드_목록_조회_응답됨(JAVA_AND_SPRING_기술_응답);
-        피드_목록_포함됨(JAVA_기술_응답,Arrays.asList(JAVA_기술가진_피드_ID, JAVA_AND_SPRING_기술가진_피드_ID));
+        피드_목록_포함됨(JAVA_기술_응답, Arrays.asList(JAVA_기술가진_피드_ID, JAVA_AND_SPRING_기술가진_피드_ID));
         피드_목록_포함됨(JAVA_AND_SPRING_기술_응답, Collections.singletonList(JAVA_AND_SPRING_기술가진_피드_ID));
     }
 
@@ -508,7 +541,7 @@ public class FeedAcceptanceTest extends AcceptanceTest {
         // then
         피드_목록_조회_응답됨(쿼리와_기술로_피드_검색_응답);
         피드_목록_조회_응답됨(쿼리_기술_필터링값으로_피드_검색_응답);
-        피드_목록_포함됨(쿼리와_기술로_피드_검색_응답,Arrays.asList(JAVA_기술가진_피드_ID, JAVA_AND_SPRING_기술가진_피드_ID));
+        피드_목록_포함됨(쿼리와_기술로_피드_검색_응답, Arrays.asList(JAVA_기술가진_피드_ID, JAVA_AND_SPRING_기술가진_피드_ID));
         피드_목록_포함됨(쿼리_기술_필터링값으로_피드_검색_응답, Collections.singletonList(JAVA_AND_SPRING_기술가진_피드_ID));
 
     }
@@ -571,7 +604,7 @@ public class FeedAcceptanceTest extends AcceptanceTest {
                 .formParam("sos", feedRequest.isSos())
                 .formParam("StorageUrl", feedRequest.getStorageUrl())
                 .formParam("DeployedUrl", feedRequest.getDeployedUrl())
-                .multiPart("thumbnailImage", thumbnail);
+                .multiPart("thumbnailImage", THUMBNAIL_IMAGE);
 
         feedRequest.getTechs().stream()
                 .forEach(techId -> requestSpecification.formParam("techs", techId));
@@ -685,9 +718,9 @@ public class FeedAcceptanceTest extends AcceptanceTest {
         return Long.valueOf(피드를_작성한다(request, tokenResponse.getAccessToken()).header("Location").replace("/feeds/", ""));
     }
 
-    public void 피드에_좋아요_눌러져있음(TokenResponse tokenResponse, Long feedId) {
+    public void 피드에_좋아요_눌러져있음(String token, Long feedId) {
         given().log().all()
-                .auth().oauth2(tokenResponse.getAccessToken())
+                .auth().oauth2(token)
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .when().post("/feeds/{feedId}/like", feedId)
                 .then().log().all()

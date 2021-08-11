@@ -2,7 +2,7 @@ import React, { InputHTMLAttributes, useEffect, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import SearchIcon from 'assets/search.svg';
-import TechTagProvider from 'context/techTag/TechTagProvider';
+import TechTagProvider from 'contexts/techTag/TechTagProvider';
 import ROUTE from 'constants/routes';
 import SearchOption from 'components/SearchOption/SearchOption';
 import Styled, { TechChips, TechInput } from './SearchBar.styles';
@@ -22,6 +22,16 @@ const SearchBar = ({ className, selectable = false, ...options }: Props) => {
 
   const search = (event: React.FormEvent) => {
     event.preventDefault();
+
+    // 아무것도 검색하지 않았을 때
+    if (
+      (searchType === SearchType.CONTENT && query === '') ||
+      (searchType === SearchType.TECH && techs.length === 0)
+    ) {
+      history.push(ROUTE.RECENT);
+
+      return;
+    }
 
     const queryParams = new URLSearchParams({
       query,

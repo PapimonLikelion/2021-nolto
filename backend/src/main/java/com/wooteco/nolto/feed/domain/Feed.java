@@ -32,7 +32,7 @@ public class Feed extends BaseEntity {
     @NotBlank
     private String title;
 
-    @Column(nullable = false, columnDefinition="TEXT")
+    @Column(nullable = false, columnDefinition = "TEXT")
     @NotBlank
     private String content;
 
@@ -54,11 +54,14 @@ public class Feed extends BaseEntity {
     @JoinColumn(foreignKey = @ForeignKey(name = "fk_feed_to_author"), nullable = false)
     private User author;
 
-    @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.REMOVE)
     private List<Like> likes = new ArrayList<>();
 
     @OneToMany(mappedBy = "feed", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<FeedTech> feedTechs = new ArrayList<>();
+
+    @OneToMany(mappedBy = "feed", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<Comment> comments = new ArrayList<>();
 
     public Feed(String title, String content, Step step, boolean isSos, String storageUrl, String deployedUrl, String thumbnailUrl) {
         this(null, title, content, step, isSos, storageUrl, deployedUrl, thumbnailUrl, 0, null, new ArrayList<>());
@@ -122,7 +125,7 @@ public class Feed extends BaseEntity {
     }
 
     public boolean notSameAuthor(User user) {
-        return !author.SameAs(user);
+        return !author.sameAs(user);
     }
 
     public void changeThumbnailUrl(String updateThumbnailUrl) {
@@ -130,20 +133,31 @@ public class Feed extends BaseEntity {
     }
 
     public void changeTechs(List<Tech> techs) {
-        this.feedTechs.clear();
         this.feedTechs.addAll(techs.stream()
                 .map(tech -> new FeedTech(this, tech))
                 .collect(Collectors.toList()));
     }
 
-    public Optional<Like> findLikeBy(User user) {
-        return likes.stream()
-                .filter(like -> like.SameAs(user))
-                .findAny();
+    public void addComment(Comment comment) {
+        this.comments.add(comment);
+    }
+
+    public void addLike(Like like) {
+        this.likes.add(like);
     }
 
     public void delete(Like like) {
         this.likes.remove(like);
+    }
+
+    public Optional<Like> findLikeBy(User user) {
+        return likes.stream()
+                .filter(like -> like.sameAs(user))
+                .findAny();
+    }
+
+    public void deleteComment(Comment comment) {
+        this.comments.remove(comment);
     }
 
     @Override

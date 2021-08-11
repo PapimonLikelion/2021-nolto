@@ -2,9 +2,9 @@ import React from 'react';
 import { useHistory } from 'react-router-dom';
 
 import Dropdown from 'components/@common/Dropdown/Dropdown';
-import useNotification from 'context/notification/useNotification';
-import useSnackBar from 'context/snackBar/useSnackBar';
-import useFeedDelete from 'hooks/mutations/useFeedDelete';
+import useDialog from 'contexts/dialog/useDialog';
+import useSnackbar from 'contexts/snackbar/useSnackbar';
+import useFeedDelete from 'hooks/queries/feed/useFeedDelete';
 import ROUTE from 'constants/routes';
 import { FeedDetail } from 'types';
 import Styled from './FeedDropdown.styles';
@@ -14,8 +14,8 @@ interface Props {
 }
 
 const FeedDropdown = ({ feedDetail }: Props) => {
-  const notification = useNotification();
-  const snackBar = useSnackBar();
+  const dialog = useDialog();
+  const snackbar = useSnackbar();
   const deleteMutation = useFeedDelete();
   const history = useHistory();
 
@@ -24,16 +24,16 @@ const FeedDropdown = ({ feedDetail }: Props) => {
   };
 
   const handleDelete = () => {
-    notification.confirm('정말로 삭제하시겠습니까?', () => {
+    dialog.confirm('정말로 삭제하시겠습니까?', () => {
       deleteMutation.mutate(
         { feedId: feedDetail.id },
         {
           onSuccess: () => {
-            snackBar.addSnackBar('success', '토이 프로젝트가 삭제되었습니다.');
+            snackbar.addSnackbar('success', '토이 프로젝트가 삭제되었습니다.');
             history.push(ROUTE.HOME);
           },
           onError: (error) => {
-            snackBar.addSnackBar('error', error.message);
+            snackbar.addSnackbar('error', error.message);
           },
         },
       );

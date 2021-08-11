@@ -2,8 +2,8 @@ import React from 'react';
 import { Redirect, Route, RouteProps } from 'react-router-dom';
 
 import useMember from 'hooks/queries/useMember';
-import useModal from 'context/modal/useModal';
-import useNotification from 'context/notification/useNotification';
+import useModal from 'contexts/modal/useModal';
+import useDialog from 'contexts/dialog/useDialog';
 import ROUTE from 'constants/routes';
 import LoginModal from './LoginModal/LoginModal';
 
@@ -14,10 +14,10 @@ interface Props extends RouteProps {
 const PrivateRoute = ({ children, ...props }: Props) => {
   const { isLogin } = useMember();
   const modal = useModal();
-  const notification = useNotification();
+  const dialog = useDialog();
 
   const openLoginModal = () => {
-    notification.confirm('로그인이 필요한 서비스입니다.', () => modal.openModal(<LoginModal />));
+    dialog.confirm('로그인이 필요한 서비스입니다.', () => modal.openModal(<LoginModal />));
   };
 
   return (

@@ -8,11 +8,11 @@ import lombok.Getter;
 @AllArgsConstructor
 public class MemberResponse {
     private final Long id;
-    private final String socialType;
-    private final String nickName;
+    private final String nickname;
     private final String imageUrl;
+    private final long notifications;
 
-    public static MemberResponse of(User user) {
-        return new MemberResponse(user.getId(), user.getSocialType().name(), user.getNickName(), user.getImageUrl());
+    public static MemberResponse of(User user, long notificationCount) {
+        return new MemberResponse(user.getId(), user.getNickName(), user.getImageUrl(), notificationCount);
     }
 }

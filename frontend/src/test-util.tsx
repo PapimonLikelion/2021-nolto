@@ -5,6 +5,12 @@ import { render, RenderOptions } from '@testing-library/react';
 import { renderHook } from '@testing-library/react-hooks';
 import { RenderHookOptions } from '@testing-library/react-hooks/lib/types';
 
+import DialogProvider from 'contexts/dialog/DialogProvider';
+import ModalProvider from 'contexts/modal/ModalProvider';
+import SnackbarProvider from 'contexts/snackbar/SnackbarProvider';
+import AsyncBoundary from 'components/AsyncBoundary';
+import ErrorFallback from 'components/ErrorFallback/ErrorFallback';
+
 interface WrapperProps {
   children?: React.ReactNode;
 }
@@ -12,6 +18,8 @@ interface WrapperProps {
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      useErrorBoundary: true,
+      suspense: true,
       retry: false,
     },
   },
@@ -20,7 +28,17 @@ const queryClient = new QueryClient({
 const Wrapper = ({ children }: WrapperProps) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{children}</MemoryRouter>
+      <SnackbarProvider>
+        <DialogProvider>
+          <ModalProvider>
+            <MemoryRouter>
+              <AsyncBoundary rejectedFallback={<ErrorFallback message="테스트 에러" />}>
+                {children}
+              </AsyncBoundary>
+            </MemoryRouter>
+          </ModalProvider>
+        </DialogProvider>
+      </SnackbarProvider>
     </QueryClientProvider>
   );
 };

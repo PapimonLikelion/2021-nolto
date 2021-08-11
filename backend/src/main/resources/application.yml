@@ -5,6 +5,7 @@ spring:
       local: console-logging
       prod: real-db,real-oauth,file-error-logging,file-info-logging,slack-prod-error-logging
       dev: dev-db,dev-oauth,file-error-logging,file-info-logging,slack-dev-error-logging
+      test: console-logging
   servlet:
     multipart:
       enabled: true
@@ -144,4 +145,5 @@ application:
     name: 2021-nolto
   cloudfront:
     url: https://dksykemwl00pf.cloudfront.net/
-  default-image: nolto-default-thumbnail.png
+  feed-default-image: nolto-default-thumbnail.png
+  user-default-image: nolto-default-thumbnail.png

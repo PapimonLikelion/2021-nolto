@@ -6,9 +6,9 @@ import FeedUploadForm from 'components/FeedUploadForm/FeedUploadForm';
 import Header from 'components/Header/Header';
 import ROUTE from 'constants/routes';
 import { ALERT_MSG } from 'constants/message';
-import useNotification from 'context/notification/useNotification';
-import useSnackBar from 'context/snackBar/useSnackBar';
-import useFeedModify from 'hooks/mutations/useFeedModify';
+import useDialog from 'contexts/dialog/useDialog';
+import useSnackbar from 'contexts/snackbar/useSnackbar';
+import useFeedModify from 'hooks/queries/feed/useFeedModify';
 import Styled from './Modify.styles';
 import { FeedDetail } from 'types';
 
@@ -16,13 +16,13 @@ const Modify = () => {
   const location = useLocation<{ feedDetail: FeedDetail }>();
   const history = useHistory();
 
-  const notification = useNotification();
-  const snackbar = useSnackBar();
+  const dialog = useDialog();
+  const snackbar = useSnackbar();
 
   const modifyMutation = useFeedModify();
 
   if (location.state?.feedDetail === undefined) {
-    notification.alert('잘못된 접근입니다.');
+    dialog.alert('잘못된 접근입니다.');
     history.push(ROUTE.HOME);
 
     return null;
@@ -44,7 +44,7 @@ const Modify = () => {
       { feedId, formData },
       {
         onSuccess: () => {
-          snackbar.addSnackBar('success', ALERT_MSG.SUCCESS_MODIFY_FEED);
+          snackbar.addSnackbar('success', ALERT_MSG.SUCCESS_MODIFY_FEED);
 
           history.push(`${ROUTE.FEEDS}/${feedId}`);
         },

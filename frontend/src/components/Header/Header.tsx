@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 
-import Logo from 'assets/logo.svg';
 import Search from 'assets/search.svg';
 import Pencil from 'assets/pencil.svg';
 import { PALETTE } from 'constants/palette';
 import ROUTE from 'constants/routes';
-import useModal from 'context/modal/useModal';
+import useModal from 'contexts/modal/useModal';
 import LoginModal from 'components/LoginModal/LoginModal';
 import { ButtonStyle } from 'types';
 import useMember from 'hooks/queries/useMember';
-import Styled, { IconButton, SearchBar, UserProfile } from './Header.styles';
+import Styled, { Logo, LogoSimple, IconButton, SearchBar, UserProfile } from './Header.styles';
 
 interface Props {
   isFolded?: boolean;
@@ -54,14 +53,15 @@ const Header = ({ isFolded = false }: Props) => {
       <Styled.HeaderContent onClick={closeSearchBar}>
         <Styled.LogoWrapper>
           <Link to={ROUTE.HOME}>
-            <Logo width="200px" />
+            <Logo width="100%" />
+            <LogoSimple width="100%" />
           </Link>
         </Styled.LogoWrapper>
         <nav>
           <Styled.NavContainer>
             <li>
               <NavLink to={ROUTE.RECENT} activeStyle={navLinkActiveStyle}>
-                Feeds
+                Toy Projects
               </NavLink>
             </li>
             <li>
@@ -77,13 +77,13 @@ const Header = ({ isFolded = false }: Props) => {
           </Styled.NavContainer>
         </nav>
         <Styled.ButtonsContainer>
-          <IconButton onClick={openSearchBar}>
-            <Search height="32px" />
+          <IconButton onClick={openSearchBar} className="search">
+            <Search height="85%" />
           </IconButton>
           {isSearchBarOpened && <SearchBar placeholder="제목/내용으로만 검색이 가능합니다" />}
-          <Link to={ROUTE.UPLOAD}>
+          <Link to={ROUTE.UPLOAD} className="upload">
             <IconButton>
-              <Pencil height="30px" />
+              <Pencil fill={PALETTE.PRIMARY_300} height="85%" />
             </IconButton>
           </Link>
 

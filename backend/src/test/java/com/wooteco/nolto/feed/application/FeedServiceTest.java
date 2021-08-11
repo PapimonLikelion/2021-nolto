@@ -7,6 +7,7 @@ import com.wooteco.nolto.exception.UnauthorizedException;
 import com.wooteco.nolto.feed.domain.Feed;
 import com.wooteco.nolto.feed.domain.FeedTech;
 import com.wooteco.nolto.feed.domain.Step;
+import com.wooteco.nolto.feed.domain.repository.FeedRepository;
 import com.wooteco.nolto.feed.ui.dto.FeedCardResponse;
 import com.wooteco.nolto.feed.ui.dto.FeedRequest;
 import com.wooteco.nolto.feed.ui.dto.FeedResponse;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +39,7 @@ import static org.mockito.BDDMockito.given;
 
 @ActiveProfiles("test")
 @SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
 @Transactional
 class FeedServiceTest {
     private FeedRequest FEED_REQUEST1 = new FeedRequest("title1", new ArrayList<>(), "content1", "PROGRESS", true,
@@ -46,12 +49,14 @@ class FeedServiceTest {
     private FeedRequest FEED_REQUEST3 = new FeedRequest("title3", new ArrayList<>(), "content3", "PROGRESS", true,
             "www.github.com/woowacourse", "www.github.com/woowacourse", null);
 
-    private User user1 = new User(null, "123456L", SocialType.GITHUB, "user1", "mickey.jpg");
-    private User user2 = new User(null, "654321L", SocialType.GOOGLE, "user2", "mickey.jpg");
+    private User user1 = new User("123456L", SocialType.GITHUB, "user1", "mickey.jpg");
+    private User user2 = new User("654321L", SocialType.GOOGLE, "user2", "mickey.jpg");
 
     private Tech techSpring = new Tech("Spring");
     private Tech techJava = new Tech("Java");
     private Tech techReact = new Tech("React");
+    @Autowired
+    private FeedRepository feedRepository;
 
     @Autowired
     private FeedService feedService;
@@ -73,7 +78,7 @@ class FeedServiceTest {
 
     @BeforeEach
     void setUp() {
-        given(imageService.upload(any(MultipartFile.class))).willReturn("image.jpg");
+        given(imageService.upload(any(MultipartFile.class), any())).willReturn("image.jpg");
         userRepository.save(user1);
         userRepository.save(user2);
 
@@ -221,7 +226,6 @@ class FeedServiceTest {
         // when
         Feed feed = feedService.findEntityById(feedId);
         List<FeedTech> feedTechs = feed.getFeedTechs();
-//        feedTechs.forEach(feedTech -> feedTechRepository.delete(feedTech));
         em.flush();
 
         // then
@@ -410,7 +414,7 @@ class FeedServiceTest {
 
     @DisplayName("좋아요 개수가 같은 경우 최신 Feed를 가져온다.(피드1: 좋아요0개, 피드2: 좋아요2개, 피드3: 좋아요2개)")
     @Test
-    void findHotFeedsBySameDate() {
+    void findHotFeedsBySameDate() throws InterruptedException {
         // given
         Long firstFeedId = feedService.create(user1, FEED_REQUEST1);
         Long secondFeedId = feedService.create(user1, FEED_REQUEST2);
@@ -435,12 +439,15 @@ class FeedServiceTest {
 
     @DisplayName("모든 피드를 조회한다. (최신 등록된 날짜 순)")
     @Test
-    void findAllWithAllFilter() {
+    void findAllWithAllFilter() throws InterruptedException {
         // given
         String defaultFilter = "all";
         feedService.create(user1, FEED_REQUEST1);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST2);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST3);
+        feedRepository.flush();
 
         // when
         List<FeedCardResponse> allFeeds = feedService.findAll(defaultFilter);
@@ -454,7 +461,7 @@ class FeedServiceTest {
 
     @DisplayName("SOS 피드를 조회한다. (최신 등록된 날짜 순)")
     @Test
-    void findAllWithFilterSOS() {
+    void findAllWithFilterSOS() throws InterruptedException {
         // given
         FEED_REQUEST1.setSos(true);
         FEED_REQUEST2.setSos(false);
@@ -462,8 +469,11 @@ class FeedServiceTest {
 
         String defaultFilter = "sos";
         feedService.create(user1, FEED_REQUEST1);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST2);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST3);
+        feedRepository.flush();
 
         // when
         List<FeedCardResponse> allFeeds = feedService.findAll(defaultFilter);
@@ -476,15 +486,18 @@ class FeedServiceTest {
 
     @DisplayName("PROGRESS 피드를 조회한다. (최신 등록된 날짜 순)")
     @Test
-    void findAllWithFilterProgress() {
+    void findAllWithFilterProgress() throws InterruptedException {
         // given
         FEED_REQUEST1.setStep(Step.COMPLETE.name());
         FEED_REQUEST2.setStep(Step.PROGRESS.name());
         FEED_REQUEST3.setStep(Step.PROGRESS.name());
 
         feedService.create(user1, FEED_REQUEST1);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST2);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST3);
+        feedRepository.flush();
 
         // when
         List<FeedCardResponse> allFeeds = feedService.findAll(Step.PROGRESS.name());
@@ -497,15 +510,18 @@ class FeedServiceTest {
 
     @DisplayName("COMPLETE 피드를 조회한다. (최신 등록된 날짜 순)")
     @Test
-    void findAllWithFilterComplete() {
+    void findAllWithFilterComplete() throws InterruptedException {
         // given
         FEED_REQUEST1.setStep(Step.COMPLETE.name());
         FEED_REQUEST2.setStep(Step.COMPLETE.name());
         FEED_REQUEST3.setStep(Step.PROGRESS.name());
 
         feedService.create(user1, FEED_REQUEST1);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST2);
+        feedRepository.flush();
         feedService.create(user1, FEED_REQUEST3);
+        feedRepository.flush();
 
         // when
         List<FeedCardResponse> allFeeds = feedService.findAll(Step.COMPLETE.name());
@@ -522,11 +538,14 @@ class FeedServiceTest {
         Long firstFeedId = feedService.create(user1, FEED_REQUEST1);
         Long secondFeedId = feedService.create(user1, FEED_REQUEST2);
         Long thirdFeedId = feedService.create(user1, FEED_REQUEST3);
-
+        em.flush();
+        em.clear();
         String query = "content";
+        List<Feed> feeds = feedRepository.findAll();
 
         //when
         List<FeedCardResponse> searchFeeds = feedService.search(query, "", "all");
+        List<Feed> feeds2 = feedRepository.findAll();
         List<Long> feedIds = searchFeeds.stream()
                 .map(FeedCardResponse::getId)
                 .collect(Collectors.toList());
@@ -543,6 +562,8 @@ class FeedServiceTest {
         Long firstFeedId = feedService.create(user1, FEED_REQUEST1);
         Long secondFeedId = feedService.create(user1, FEED_REQUEST2);
         Long thirdFeedId = feedService.create(user1, FEED_REQUEST3);
+        em.flush();
+        em.clear();
 
         String query = "tle1";
 
@@ -569,6 +590,9 @@ class FeedServiceTest {
 
         FEED_REQUEST3.setTechs(Collections.singletonList(techReact.getId()));
         Long thirdFeedId = feedService.create(user1, FEED_REQUEST3);
+
+        em.flush();
+        em.clear();
 
         String techs = "Spring,Java";
 
@@ -618,6 +642,8 @@ class FeedServiceTest {
 
         FEED_REQUEST3.setTechs(Collections.singletonList(techReact.getId()));
         Long thirdFeedId = feedService.create(user1, FEED_REQUEST3);
+        em.flush();
+        em.clear();
 
         String query = "title";
         String techs = "Spring,Java";
@@ -641,13 +667,15 @@ class FeedServiceTest {
         FEED_REQUEST1.setSos(true);
         Long firstFeedId = feedService.create(user1, FEED_REQUEST1);
 
-        FEED_REQUEST2.setTechs(Arrays.asList(techSpring.getId() , techJava.getId()));
+        FEED_REQUEST2.setTechs(Arrays.asList(techSpring.getId(), techJava.getId()));
         FEED_REQUEST2.setSos(false);
         Long secondFeedId = feedService.create(user1, FEED_REQUEST2);
 
         FEED_REQUEST3.setTechs(Collections.singletonList(techReact.getId()));
         FEED_REQUEST3.setSos(false);
         Long thirdFeedId = feedService.create(user1, FEED_REQUEST3);
+        em.flush();
+        em.clear();
 
         String query = "title";
         String techs = "Spring,Java";
@@ -671,13 +699,15 @@ class FeedServiceTest {
         FEED_REQUEST1.setStep("PROGRESS");
         Long firstFeedId = feedService.create(user1, FEED_REQUEST1);
 
-        FEED_REQUEST2.setTechs(Arrays.asList(techSpring.getId() , techJava.getId()));
+        FEED_REQUEST2.setTechs(Arrays.asList(techSpring.getId(), techJava.getId()));
         FEED_REQUEST2.setStep("PROGRESS");
         Long secondFeedId = feedService.create(user1, FEED_REQUEST2);
 
-        FEED_REQUEST3.setTechs(Arrays.asList(techSpring.getId() , techJava.getId()));
+        FEED_REQUEST3.setTechs(Arrays.asList(techSpring.getId(), techJava.getId()));
         FEED_REQUEST3.setStep("COMPLETE");
         Long thirdFeedId = feedService.create(user1, FEED_REQUEST3);
+        em.flush();
+        em.clear();
 
         String query = "title";
         String techs = "Spring,Java";
@@ -702,13 +732,15 @@ class FeedServiceTest {
         FEED_REQUEST1.setStep("COMPLETE");
         Long firstFeedId = feedService.create(user1, FEED_REQUEST1);
 
-        FEED_REQUEST2.setTechs(Arrays.asList(techSpring.getId() , techJava.getId()));
+        FEED_REQUEST2.setTechs(Arrays.asList(techSpring.getId(), techJava.getId()));
         FEED_REQUEST2.setStep("PROGRESS");
         Long secondFeedId = feedService.create(user1, FEED_REQUEST2);
 
-        FEED_REQUEST3.setTechs(Arrays.asList(techSpring.getId() , techJava.getId()));
+        FEED_REQUEST3.setTechs(Arrays.asList(techSpring.getId(), techJava.getId()));
         FEED_REQUEST3.setStep("COMPLETE");
         Long thirdFeedId = feedService.create(user1, FEED_REQUEST3);
+        em.flush();
+        em.clear();
 
         String query = "title";
         String techs = "Spring,Java";
